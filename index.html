@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RZ 荣荣的服务器 - 我的世界跨版本互通</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<audio id="bgMusic" loop preload="auto">
+    <source src="https://rz464.github.io/617884/知更鸟、HOYO-MiX、Chevy - 希望有羽毛和翅膀 (Hope Is the Thing With Feathers).mp3" type="audio/mpeg">
+</audio>
+
+<button class="music-float-ball" id="musicFloatBall">
+    <div class="music-icon">♪</div>
+    <div class="music-text">音乐</div>
+</button>
+
+<div class="music-player" id="musicPlayer">
+    <div class="error-message" id="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorText">发生错误，请稍后再试。如网络异常，请多点击几次重试</span>
+    </div>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="搜索歌曲、歌手...">
+        <button id="searchBtn"><i class="fas fa-search"></i></button>
+    </div>
+    <div class="results-container">
+        <div class="results-title" id="resultsTitle">
+            🔥 热门推荐
+            <span id="resultsCount">加载中...</span>
+        </div>
+        <div id="resultsList">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>正在加载热歌榜...</p>
+            </div>
+        </div>
+    </div>
+    <div class="now-playing">
+        <div class="now-playing-cover" id="nowPlayingCover"><i class="fas fa-music"></i></div>
+        <div class="now-playing-info">
+            <h3 id="nowPlayingTitle">未选择歌曲</h3>
+            <p id="nowPlayingArtist">-</p>
+        </div>
+    </div>
+    <div class="music-controls">
+        <button class="music-control-btn" id="prevBtn"><i class="fas fa-step-backward"></i></button>
+        <button class="music-control-btn music-play-btn" id="playPauseBtn"><i class="fas fa-play" id="playIcon"></i></button>
+        <button class="music-control-btn" id="nextBtn"><i class="fas fa-step-forward"></i></button>
+    </div>
+    <div class="progress-container">
+        <div class="progress-info"><span id="currentTime">0:00</span><span id="duration">0:00</span></div>
+        <div class="progress-bar" id="progressBar"><div class="progress" id="progress"></div></div>
+    </div>
+    <div class="volume-control">
+        <span class="volume-icon"><i class="fas fa-volume-up"></i></span>
+        <input type="range" min="0" max="100" value="50" class="volume-slider" id="volumeSlider">
+    </div>
+    <div class="quality-container">
+        <div class="quality-title"><i class="fas fa-headphones"></i> 音质选择</div>
+        <div class="quality-selector">
+            <button class="quality-btn active" data-quality="hires">高清音质</button>
+            <button class="quality-btn" data-quality="lossless">无损音质</button>
+            <button class="quality-btn" data-quality="exhigh">极高音质</button>
+            <button class="quality-btn" data-quality="higher">较高音质</button>
+            <button class="quality-btn" data-quality="standard">标准音质</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>RZ 荣荣的服务器</h1>
+        <p>Java 全版本兼容 | 稳定开服 | 纯粹公益服</p>
+    </div>
+    <div class="core">
+        <div class="ip-box">
+            <h2>服务器连接 IP</h2>
+            <div class="ip-content">
+                <div class="ip-text" id="ip">rzmc.cc.cd</div>
+                <button class="copy-btn" onclick="copyIp()">一键复制</button>
+            </div>
+        </div>
+        <div class="status-box">
+            <h2>服务器实时状态</h2>
+            <div class="status-header">
+                <div class="server-icon-container">
+                    <img id="server-icon" class="server-icon" alt="服务器图标" src="https://api.mcsrvstat.us/icon/rzmc.cc.cd" onerror="this.src='https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20/block/grass_block_top.png'">
+                </div>
+                <div class="status-title">RZ 主服</div>
+            </div>
+            <div class="motd" id="motd">加载服务器简介...</div>
+            <div class="player-count" id="online">加载中...</div>
+            <div class="status-desc" id="status-desc">实时监控中，30秒自动刷新</div>
+        </div>
+        <div class="players-section">
+            <div class="players-header">
+                <i class="fas fa-users"></i>
+                <h3>在线玩家</h3>
+                <span class="players-count-badge" id="playersCountBadge">0</span>
+                <button class="refresh-players-btn" id="refreshPlayersBtn" title="刷新玩家列表">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div class="player-list" id="playerList">
+                <div class="loading-players">加载中...</div>
+            </div>
+        </div>
+        <div class="feature">
+            <h2>服务器状态</h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h3>Java 跨版本</h3>
+                    <p>支持多版本进入，无需单独适配</p>
+                </div>
+                <div class="feature-item">
+                    <h3>子服状态</h3>
+                    <div style="text-align:center; margin-top:10px;">
+                        <img id="sub-icon" src="https://api.mcsrvstat.us/icon/rzmc.owo.vin" onerror="this.src='https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20/block/diamond_block.png'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:2px solid rgba(46,204,113,0.3);">
+                        <div id="sub-online" style="font-size:16px;font-weight:bold;color:#2ecc71;margin:6px 0 4px;">加载中...</div>
+                        <div id="sub-motd" style="font-size:12px;color:rgba(255,255,255,0.7);">加载子服状态...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="qun-box">
+            <h2>加入官方交流群</h2>
+            <button class="qun-btn" onclick="copyGroup()">复制QQ群号 | 929934674</button>
+        </div>
+    </div>
+    <div class="footer">RZ</div>
+</div>
+
+<div class="toast" id="toast">IP 复制成功！</div>
+<audio id="audioPlayer" preload="metadata"></audio>
+
+<script src="js/script.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"41bce292eb494fd3ac310ad83536616b","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
