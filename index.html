@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>RZ 荣荣的服务器 - 我的世界跨版本互通</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
@@ -29,7 +29,9 @@
     </div>
     <div class="results-container">
         <div class="results-title" id="resultsTitle">
-            🔥 热门推荐
+            <span class="results-title-left">
+                <i class="fas fa-fire-flame-curved" style="color: #f39c12;"></i> 热门推荐
+            </span>
             <span id="resultsCount">加载中...</span>
         </div>
         <div id="resultsList">
@@ -109,6 +111,35 @@
                 <div class="loading-players">加载中...</div>
             </div>
         </div>
+
+        <div class="admin-section">
+            <div class="admin-header">
+                <i class="fas fa-shield-alt"></i>
+                <h3>服务器管理员</h3>
+                <span class="admin-badge">2人</span>
+            </div>
+            <div class="admin-item">
+                <img class="admin-avatar" src="https://q1.qlogo.cn/g?b=qq&nk=2858627536&s=100" alt="荣荣头像" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=rongrong'">
+                <div class="admin-info">
+                    <div class="admin-name">荣荣</div>
+                    <div class="admin-detail">
+                        <span><i class="fab fa-qq"></i> 2858627536</span>
+                        <span><i class="fas fa-gamepad"></i> nmdkkd</span>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-item">
+                <img class="admin-avatar" src="https://q1.qlogo.cn/g?b=qq&nk=3097838101&s=100" alt="小梓头像" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=xiaozi'">
+                <div class="admin-info">
+                    <div class="admin-name">小梓.喵~</div>
+                    <div class="admin-detail">
+                        <span><i class="fab fa-qq"></i> 3097838101</span>
+                        <span><i class="fas fa-gamepad"></i> xiaozi200913</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="feature">
             <h2>服务器状态</h2>
             <div class="feature-list">
@@ -138,6 +169,5 @@
 <audio id="audioPlayer" preload="metadata"></audio>
 
 <script src="js/script.js"></script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"41bce292eb494fd3ac310ad83536616b","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
