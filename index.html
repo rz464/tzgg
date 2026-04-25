@@ -2,16 +2,24 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>RZ 荣荣的服务器 - 我的世界跨版本互通</title>
     <link rel="icon" href="images/icon.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            padding-top: env(safe-area-inset-top);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+        }
+    </style>
 </head>
 <body>
 
-<audio id="bgMusic" loop preload="auto">
-    <source src="https://rz464.github.io/617884/知更鸟、HOYO-MiX、Chevy - 希望有羽毛和翅膀 (Hope Is the Thing With Feathers).mp3" type="audio/mpeg">
+<audio id="bgMusic" loop preload="none">
+    <source src="https://rz464.github.io/617884/%E7%9F%A5%E6%9B%B4%E9%B8%9F%E3%80%81HOYO-MiX%E3%80%81Chevy%20-%20%E5%B8%8C%E6%9C%9B%E6%9C%89%E7%BE%BD%E6%AF%9B%E5%92%8C%E7%BF%85%E8%86%80%20(Hope%20Is%20the%20Thing%20With%20Feathers).mp3" type="audio/mpeg">
 </audio>
 
 <button class="music-float-ball" id="musicFloatBall">
@@ -22,7 +30,7 @@
 <div class="music-player" id="musicPlayer">
     <div class="error-message" id="errorMessage">
         <i class="fas fa-exclamation-circle"></i>
-        <span id="errorText">发生错误，请稍后再试。如网络异常，请多点击几次重试</span>
+        <span id="errorText">加载失败，请检查网络连接后刷新页面</span>
     </div>
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="搜索歌曲、歌手...">
@@ -91,7 +99,7 @@
             <h2>服务器实时状态</h2>
             <div class="status-header">
                 <div class="server-icon-container">
-                    <img id="server-icon" class="server-icon" alt="服务器图标" src="https://api.mcsrvstat.us/icon/rzmc.cc.cd" onerror="this.src='https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20/block/grass_block_top.png'">
+                    <img id="server-icon" class="server-icon" alt="服务器图标" src="https://api.mcsrvstat.us/icon/rzmc.cc.cd" onerror="this.src='https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20/block/grass_block_top.png'" loading="lazy">
                 </div>
                 <div class="status-title">RZ 主服</div>
             </div>
@@ -120,7 +128,7 @@
                 <span class="admin-badge">2人</span>
             </div>
             <div class="admin-item">
-                <img class="admin-avatar" src="https://q1.qlogo.cn/g?b=qq&nk=2858627536&s=100" alt="荣荣头像" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=rongrong'">
+                <img class="admin-avatar" src="https://q1.qlogo.cn/g?b=qq&nk=2858627536&s=100" alt="荣荣头像" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=rongrong'" loading="lazy">
                 <div class="admin-info">
                     <div class="admin-name">荣荣</div>
                     <div class="admin-detail">
@@ -130,7 +138,7 @@
                 </div>
             </div>
             <div class="admin-item">
-                <img class="admin-avatar" src="https://q1.qlogo.cn/g?b=qq&nk=3097838101&s=100" alt="小梓头像" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=xiaozi'">
+                <img class="admin-avatar" src="https://q1.qlogo.cn/g?b=qq&nk=3097838101&s=100" alt="小梓头像" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=xiaozi'" loading="lazy">
                 <div class="admin-info">
                     <div class="admin-name">小梓.喵~</div>
                     <div class="admin-detail">
@@ -151,7 +159,7 @@
                 <div class="feature-item">
                     <h3>子服状态</h3>
                     <div style="text-align:center; margin-top:10px;">
-                        <img id="sub-icon" src="https://api.mcsrvstat.us/icon/rzmc.owo.vin" onerror="this.src='https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20/block/diamond_block.png'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:2px solid rgba(46,204,113,0.3);">
+                        <img id="sub-icon" src="https://api.mcsrvstat.us/icon/rzmc.owo.vin" onerror="this.src='https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/master/data/1.20/block/diamond_block.png'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:2px solid rgba(46,204,113,0.3);" loading="lazy">
                         <div id="sub-online" style="font-size:16px;font-weight:bold;color:#2ecc71;margin:6px 0 4px;">加载中...</div>
                         <div id="sub-motd" style="font-size:12px;color:rgba(255,255,255,0.7);">加载子服状态...</div>
                     </div>
