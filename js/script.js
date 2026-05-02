@@ -406,6 +406,15 @@
         progress.style.width = (pos * 100) + '%';
     }
 
+    const MAIN_IP = "rzmc.cc.cd", SUB_IP = "rzmc.owo.vin";
+    const mainIcon = document.getElementById("server-icon");
+    const mainOnline = document.getElementById("online");
+    const mainMotd = document.getElementById("motd");
+    const mainDesc = document.getElementById("status-desc");
+    const subIcon = document.getElementById("sub-icon");
+    const subOnline = document.getElementById("sub-online");
+    const subMotd = document.getElementById("sub-motd");
+
     function renderPlayerList(playerNames) {
         const playerListDiv = document.getElementById('playerList');
         const badgeSpan = document.getElementById('playersCountBadge');
@@ -418,33 +427,44 @@
         }
 
         let html = '';
-        playerNames.forEach(name => {
-            html += `
-                <div class="player-item">
-                    <i class="fas fa-user-circle"></i>
-                    <span class="player-name">${escapeHtml(name)}</span>
-                </div>
-            `;
+        playerNames.forEach(item => {
+            let displayName = '';
+            if (typeof item === 'string') {
+                displayName = item;
+            } else if (item && item.name) {
+                displayName = item.name;
+            } else if (item && item.name_clean) {
+                displayName = item.name_clean;
+            } else if (item && item.uuid) {
+                displayName = item.name || item.uuid.substring(0, 8);
+            }
+            if (displayName) {
+                html += `<div class="player-item"><i class="fas fa-user-circle"></i><span class="player-name">${escapeHtml(displayName)}</span></div>`;
+            }
         });
         playerListDiv.innerHTML = html;
         if (badgeSpan) badgeSpan.textContent = playerNames.length;
     }
 
-    const MAIN_IP = "rzmc.cc.cd", SUB_IP = "rzmc.owo.vin";
-    const mainIcon = document.getElementById("server-icon");
-    const mainOnline = document.getElementById("online");
-    const mainMotd = document.getElementById("motd");
-    const mainDesc = document.getElementById("status-desc");
-    const subIcon = document.getElementById("sub-icon");
-    const subOnline = document.getElementById("sub-online");
-    const subMotd = document.getElementById("sub-motd");
+    async function fetchWithTimeout(url, options = {}, timeout = 5000) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        try {
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (err) {
+            clearTimeout(timeoutId);
+            throw err;
+        }
+    }
 
     async function loadMain() {
         try {
-            const response = await fetch(`https://api.mcsrvstat.us/2/${MAIN_IP}`, {
+            const response = await fetchWithTimeout(`https://api.mcsrvstat.us/2/${MAIN_IP}`, {
                 cache: 'no-cache',
                 headers: { 'Accept': 'application/json' }
-            });
+            }, 5000);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             
@@ -464,7 +484,14 @@
                 if (data.icon) mainIcon.src = data.icon;
                 mainDesc.innerText = "主服正常运行中";
                 
-                const playerList = data.players?.list || [];
+                let playerList = [];
+                if (data.players) {
+                    if (data.players.list && Array.isArray(data.players.list)) {
+                        playerList = data.players.list;
+                    } else if (data.players.sample && Array.isArray(data.players.sample)) {
+                        playerList = data.players.sample;
+                    }
+                }
                 renderPlayerList(playerList);
                 return;
             } else {
@@ -473,7 +500,7 @@
         } catch (err) {
             console.warn('mcsrvstat.us 失败，尝试备用 API', err);
             try {
-                const backupRes = await fetch(`https://api.mcstatus.io/v2/status/java/${MAIN_IP}`);
+                const backupRes = await fetchWithTimeout(`https://api.mcstatus.io/v2/status/java/${MAIN_IP}`);
                 if (!backupRes.ok) throw new Error();
                 const backupData = await backupRes.json();
                 if (backupData.online) {
@@ -482,7 +509,16 @@
                     mainMotd.innerText = backupData.motd?.clean || "欢迎来到RZ主服";
                     if (backupData.icon) mainIcon.src = backupData.icon;
                     mainDesc.innerText = "主服运行中（备用数据）";
-                    renderPlayerList(backupData.players?.sample || []);
+                    
+                    let playerList = [];
+                    if (backupData.players) {
+                        if (backupData.players.sample && Array.isArray(backupData.players.sample)) {
+                            playerList = backupData.players.sample;
+                        } else if (backupData.players.list && Array.isArray(backupData.players.list)) {
+                            playerList = backupData.players.list;
+                        }
+                    }
+                    renderPlayerList(playerList);
                     return;
                 } else {
                     throw new Error('备用API也返回离线');
@@ -500,7 +536,7 @@
 
     async function loadSub() {
         try {
-            const response = await fetch(`https://api.mcsrvstat.us/2/${SUB_IP}`);
+            const response = await fetchWithTimeout(`https://api.mcsrvstat.us/2/${SUB_IP}`);
             const data = await response.json();
             if (data.online) {
                 const onlineCount = data.players?.online || 0;
@@ -521,7 +557,7 @@
         } catch (err) {
             console.warn('子服状态获取失败，尝试备用API');
             try {
-                const backupRes = await fetch(`https://api.mcstatus.io/v2/status/java/${SUB_IP}`);
+                const backupRes = await fetchWithTimeout(`https://api.mcstatus.io/v2/status/java/${SUB_IP}`);
                 const backupData = await backupRes.json();
                 if (backupData.online) {
                     subOnline.innerText = `${backupData.players.online} / ${backupData.players.max}`;
