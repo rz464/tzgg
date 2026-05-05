@@ -338,7 +338,7 @@
             
             currentSongs = data.data.songs;
             displayResults(currentSongs, false);
-            resultsTitle.innerHTML = '<span class="results-title-left"><i class="fas fa-search" style="color: #2ecc71;"></i> 搜索结果 “' + escapeHtml(query) + '”</span> <span id="resultsCount">' + currentSongs.length + ' 首</span>';
+            resultsTitle.innerHTML = '<span class="results-title-left"><i class="fas fa-search" style="color: #2ecc71;"></i> 搜索结果 "' + escapeHtml(query) + '"</span> <span id="resultsCount">' + currentSongs.length + ' 首</span>';
             hideError();
         } catch (error) {
             if (error.name === 'AbortError') {
@@ -415,14 +415,18 @@
     const subOnline = document.getElementById("sub-online");
     const subMotd = document.getElementById("sub-motd");
 
-    function renderPlayerList(playerNames) {
+    function renderPlayerList(playerNames, onlineCount) {
         const playerListDiv = document.getElementById('playerList');
         const badgeSpan = document.getElementById('playersCountBadge');
         if (!playerListDiv) return;
 
         if (!playerNames || playerNames.length === 0) {
-            playerListDiv.innerHTML = '<div class="no-players"><i class="fas fa-user-slash"></i> 暂无在线玩家</div>';
-            if (badgeSpan) badgeSpan.textContent = '0';
+            if (onlineCount > 0) {
+                playerListDiv.innerHTML = `<div class="no-players"><i class="fas fa-user-secret"></i> ${onlineCount} 人在线</div>`;
+            } else {
+                playerListDiv.innerHTML = '<div class="no-players"><i class="fas fa-user-slash"></i> 暂无在线玩家</div>';
+            }
+            if (badgeSpan) badgeSpan.textContent = onlineCount || 0;
             return;
         }
 
@@ -442,41 +446,35 @@
                 html += `<div class="player-item"><i class="fas fa-user-circle"></i><span class="player-name">${escapeHtml(displayName)}</span></div>`;
             }
         });
+        
+        if (!html && onlineCount > 0) {
+            playerListDiv.innerHTML = `<div class="no-players"><i class="fas fa-user-secret"></i> ${onlineCount} 人在线</div>`;
+            if (badgeSpan) badgeSpan.textContent = onlineCount;
+            return;
+        }
+        
         playerListDiv.innerHTML = html;
         if (badgeSpan) badgeSpan.textContent = playerNames.length;
     }
 
-    async function fetchWithTimeout(url, options = {}, timeout = 5000) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(timeoutId);
-            return response;
-        } catch (err) {
-            clearTimeout(timeoutId);
-            throw err;
-        }
-    }
-
     async function loadMain() {
+        let playerList = [];
+        let onlineCount = 0;
+
         try {
-            const response = await fetchWithTimeout(`https://api.mcsrvstat.us/2/${MAIN_IP}`, {
-                cache: 'no-cache',
-                headers: { 'Accept': 'application/json' }
-            }, 5000);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const response = await fetch(`https://api.mcstatus.io/v2/status/java/${MAIN_IP}`);
+            if (!response.ok) throw new Error();
             const data = await response.json();
             
             if (data.online) {
-                const onlineCount = data.players?.online ?? 0;
-                const maxCount = data.players?.max ?? 0;
+                onlineCount = data.players?.online || 0;
+                const maxCount = data.players?.max || 0;
                 mainOnline.innerText = `${onlineCount} / ${maxCount}`;
                 mainOnline.style.color = "#2ecc71";
                 
                 let motdText = "欢迎来到RZ主服";
-                if (data.motd && data.motd.clean && data.motd.clean.length > 0) {
-                    motdText = data.motd.clean.join(' ');
+                if (data.motd && data.motd.clean) {
+                    motdText = data.motd.clean;
                     motdText = decodeHtmlEntities(motdText);
                 }
                 mainMotd.innerText = motdText;
@@ -484,59 +482,63 @@
                 if (data.icon) mainIcon.src = data.icon;
                 mainDesc.innerText = "主服正常运行中";
                 
-                let playerList = [];
                 if (data.players) {
-                    if (data.players.list && Array.isArray(data.players.list)) {
-                        playerList = data.players.list;
-                    } else if (data.players.sample && Array.isArray(data.players.sample)) {
+                    if (data.players.sample && Array.isArray(data.players.sample) && data.players.sample.length > 0) {
                         playerList = data.players.sample;
+                    } else if (data.players.list && Array.isArray(data.players.list) && data.players.list.length > 0) {
+                        playerList = data.players.list;
                     }
                 }
-                renderPlayerList(playerList);
+                renderPlayerList(playerList, onlineCount);
                 return;
             } else {
-                throw new Error('服务器离线');
+                throw new Error('离线');
             }
         } catch (err) {
-            console.warn('mcsrvstat.us 失败，尝试备用 API', err);
+            console.warn('mcstatus.io 失败，尝试备用 API');
             try {
-                const backupRes = await fetchWithTimeout(`https://api.mcstatus.io/v2/status/java/${MAIN_IP}`);
-                if (!backupRes.ok) throw new Error();
+                const backupRes = await fetch(`https://api.mcsrvstat.us/2/${MAIN_IP}`);
                 const backupData = await backupRes.json();
                 if (backupData.online) {
-                    mainOnline.innerText = `${backupData.players.online} / ${backupData.players.max}`;
+                    onlineCount = backupData.players?.online || 0;
+                    mainOnline.innerText = `${onlineCount} / ${backupData.players?.max || 0}`;
                     mainOnline.style.color = "#2ecc71";
-                    mainMotd.innerText = backupData.motd?.clean || "欢迎来到RZ主服";
-                    if (backupData.icon) mainIcon.src = backupData.icon;
-                    mainDesc.innerText = "主服运行中（备用数据）";
                     
-                    let playerList = [];
+                    let motdText = "欢迎来到RZ主服";
+                    if (backupData.motd && backupData.motd.clean && backupData.motd.clean.length > 0) {
+                        motdText = backupData.motd.clean.join(' ');
+                        motdText = decodeHtmlEntities(motdText);
+                    }
+                    mainMotd.innerText = motdText;
+                    if (backupData.icon) mainIcon.src = backupData.icon;
+                    mainDesc.innerText = "主服正常运行中";
+                    
                     if (backupData.players) {
-                        if (backupData.players.sample && Array.isArray(backupData.players.sample)) {
-                            playerList = backupData.players.sample;
-                        } else if (backupData.players.list && Array.isArray(backupData.players.list)) {
+                        if (backupData.players.list && Array.isArray(backupData.players.list) && backupData.players.list.length > 0) {
                             playerList = backupData.players.list;
+                        } else if (backupData.players.sample && Array.isArray(backupData.players.sample) && backupData.players.sample.length > 0) {
+                            playerList = backupData.players.sample;
                         }
                     }
-                    renderPlayerList(playerList);
+                    renderPlayerList(playerList, onlineCount);
                     return;
                 } else {
-                    throw new Error('备用API也返回离线');
+                    throw new Error();
                 }
-            } catch (backupErr) {
-                console.error('所有API均失败', backupErr);
+            } catch {
                 mainOnline.innerText = "获取失败";
                 mainOnline.style.color = "#f39c12";
                 mainMotd.innerText = "无法获取服务器状态";
                 mainDesc.innerText = "请检查网络后刷新";
-                renderPlayerList([]);
+                renderPlayerList([], 0);
             }
         }
     }
 
     async function loadSub() {
         try {
-            const response = await fetchWithTimeout(`https://api.mcsrvstat.us/2/${SUB_IP}`);
+            const response = await fetch(`https://api.mcstatus.io/v2/status/java/${SUB_IP}`);
+            if (!response.ok) throw new Error();
             const data = await response.json();
             if (data.online) {
                 const onlineCount = data.players?.online || 0;
@@ -545,8 +547,8 @@
                 subOnline.style.color = "#2ecc71";
                 
                 let motdText = "子服运行中";
-                if (data.motd && data.motd.clean && data.motd.clean.length > 0) {
-                    motdText = data.motd.clean.join(' ');
+                if (data.motd && data.motd.clean) {
+                    motdText = data.motd.clean;
                     motdText = decodeHtmlEntities(motdText);
                 }
                 subMotd.innerText = motdText;
@@ -555,14 +557,20 @@
                 throw new Error('离线');
             }
         } catch (err) {
-            console.warn('子服状态获取失败，尝试备用API');
+            console.warn('子服 mcstatus.io 失败，尝试备用API');
             try {
-                const backupRes = await fetchWithTimeout(`https://api.mcstatus.io/v2/status/java/${SUB_IP}`);
+                const backupRes = await fetch(`https://api.mcsrvstat.us/2/${SUB_IP}`);
                 const backupData = await backupRes.json();
                 if (backupData.online) {
-                    subOnline.innerText = `${backupData.players.online} / ${backupData.players.max}`;
+                    subOnline.innerText = `${backupData.players?.online || 0} / ${backupData.players?.max || 0}`;
                     subOnline.style.color = "#2ecc71";
-                    subMotd.innerText = backupData.motd?.clean || "子服运行中";
+                    
+                    let motdText = "子服运行中";
+                    if (backupData.motd && backupData.motd.clean && backupData.motd.clean.length > 0) {
+                        motdText = backupData.motd.clean.join(' ');
+                        motdText = decodeHtmlEntities(motdText);
+                    }
+                    subMotd.innerText = motdText;
                     if (backupData.icon) subIcon.src = backupData.icon;
                 } else {
                     throw new Error();
@@ -630,6 +638,12 @@
         
         if (refreshPlayersBtn) {
             refreshPlayersBtn.addEventListener('click', () => {
+                const playerListDiv = document.getElementById('playerList');
+                if (playerListDiv) {
+                    playerListDiv.innerHTML = '<div class="loading-players"><i class="fas fa-spinner fa-spin"></i> 刷新中...</div>';
+                }
+                const badge = document.getElementById('playersCountBadge');
+                if (badge) badge.textContent = '...';
                 loadMain();
                 showToast('正在刷新玩家列表...');
             });
